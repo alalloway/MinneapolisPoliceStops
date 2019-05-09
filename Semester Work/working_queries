@@ -1,0 +1,117 @@
+SELECT * FROM incomeracempls LIMIT 10
+
+SELECT * FROM minneapolispolicestops LIMIT 10
+
+SELECT * FROM neighborhoods LIMIT 10
+
+SELECT * FROM hencotracts LIMIT 10
+
+SELECT race,count(race) as race_count, (count(race)/(119671)::float)*100 as stop_pct
+FROM minneapolispolicestops as stops
+GROUP BY race
+ORDER BY stop_pct DESC;
+
+
+SELECT count(objectid) FROM minneapolispolicestops
+
+SELECT race,gender,count(race) as race_count,n.commname
+FROM minneapolispolicestops as stops
+INNER JOIN neighborhoods as n ON ST_Intersects(stops.geom,n.geom)
+GROUP BY race,gender,n.commname
+ORDER BY race_count DESC;
+
+SELECT count(stops.gid) as stop_count, n.commname as neighborhood
+FROM minneapolispolicestops as stops
+INNER JOIN neighborhoods as n ON ST_Intersects(stops.geom,n.geom)
+GROUP BY n.commname
+ORDER BY stop_count DESC;
+
+SELECT count(stops.gid) as stop_count,stops.race, n.commname as neighborhood
+FROM minneapolispolicestops as stops
+INNER JOIN neighborhoods as n ON ST_Intersects(stops.geom,n.geom)
+GROUP BY n.commname,stops.race
+ORDER BY stop_count DESC;
+
+SELECT count(stops.gid) as stop_count,stops.race, n.commname as neighborhood
+FROM minneapolispolicestops as stops
+INNER JOIN neighborhoods as n ON ST_Intersects(stops.geom,n.geom)
+GROUP BY n.commname,stops.race
+ORDER BY stop_count DESC;
+
+SELECT race,count(race) as race_count, (count(race)/(119671)::float)*100 as stop_pct
+FROM minneapolispolicestops as stops
+GROUP BY race
+ORDER BY stop_pct DESC;
+
+WITH census as
+(
+SELECT * 
+FROM incomeracempls as demog
+INNER JOIN hencotracts as tracts ON (demog.primaryid::varchar=tracts.geoid)
+),
+
+WITH census as
+(
+SELECT * 
+FROM incomeracempls as demog
+INNER JOIN hencotracts as tracts ON (demog.primaryid::varchar=tracts.geoid)
+),
+nd as
+(
+SELECT *
+FROM census
+INNER JOIN neighborhoods as n ON ST_Intersects(census.geom,n.geom)
+)
+SELECT nd.totalhh
+FROM nd
+
+
+WITH X as VALUES (PrimaryID, Geography_Label, 
+TotalHH, TotalMedIncome, WhiteHH, WhiteIncome, BlackHH, BlackIncome, 
+NativeHH, NativeIncome, AsianHH, 
+AsianIncome, NHPIHH, NHPIIncome, SORHH, SORIncome, 
+MultiracialHH, MultiracialIncome, HispanicHH, HispanicIncome, geoid),
+
+WITH census as
+(
+SELECT * 
+FROM incomeracempls as demog
+INNER JOIN hencotracts as tracts ON (demog.primaryid::varchar=tracts.geoid)
+)
+
+SELECT count(stops.gid)as stops_count,stops.race,census.geography_label,n.commname as neighborhood,census.totalmedincome as median_income,(census.totalhh - census.whitehh) as nonwhite_households,totalhh as total_households
+FROM census
+INNER JOIN minneapolispolicestops as stops 
+ON ST_CONTAINS(census.geom,stops.geom)
+INNER JOIN neighborhoods as n 
+ON ST_CONTAINS(n.geom,census.geom)
+GROUP BY census.geography_label,neighborhood,median_income,nonwhite_households,total_households,stops.race
+ORDER BY stops_count DESC
+
+----- VISUALIZATIONS -----
+label: $feature.neighborhood + " " + "stops: "+$feature.stop_count (arcade)
+CREATE VIEW neighborhoods_stops_and_race AS
+SELECT count(stops.gid) as stop_count,stops.race, n.commname as neighborhood,n.geom
+FROM minneapolispolicestops as stops
+INNER JOIN neighborhoods as n ON ST_Intersects(stops.geom,n.geom)
+GROUP BY n.commname,stops.race,n.geom
+ORDER BY stop_count DESC;
+
+CREATE VIEW neighborhoods_stops_count AS
+SELECT count(stops.gid) as stop_count, n.commname as neighborhood,n.geom
+FROM minneapolispolicestops as stops
+INNER JOIN neighborhoods as n ON ST_Intersects(stops.geom,n.geom)
+GROUP BY n.commname,n.geom
+
+--CLUSTERING-----
+
+CREATE VIEW stop_clusters3 AS SELECT
+ST_ClusterKMeans(stops.geom, 3)OVER (PARTITION BY stops.race) as kmeans,stops.race
+FROM minneapolispolicestops as stops
+GROUP BY stops.race,stops.geom;
+
+
+
+
+
+

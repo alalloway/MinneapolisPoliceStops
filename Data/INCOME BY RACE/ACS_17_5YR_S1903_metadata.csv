@@ -1,0 +1,12 @@
+GEO.id2,Id
+GEO.display-label,Geography_Label
+HC03_EST_VC02,MedianIncome
+HC03_EST_VC04,MedianIncome_White
+HC03_EST_VC05,MedianIncome_Black
+HC03_EST_VC06,MedianIncome_Native
+HC03_EST_VC07,MedianIncome_Asian
+HC03_EST_VC08,MedianIncome_NH_PI
+HC03_EST_VC09,MedianIncome_SOR
+HC03_EST_VC10,MedianIncome_Multiracial
+HC03_EST_VC12,MedianIncome_Hispanic
+HC03_EST_VC13,MedianIncome_White_notHispanic
