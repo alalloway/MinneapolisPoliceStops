@@ -1,0 +1,77 @@
+--Create Table Statement
+
+--In database:
+
+CREATE TABLE IncomeRaceMpls(
+PrimaryID bigint,
+Geography_Label varchar,
+TotalHH integer,
+TotalMedIncome integer,	
+WhiteHH integer,
+WhiteIncome integer,
+BlackHH integer,
+BlackIncome integer,
+NativeHH integer,
+NativeIncome integer,
+AsianHH integer,
+AsianIncome integer,
+NHPIHH integer,
+NHPIIncome integer,
+SORHH integer,
+SORIncome integer,
+MultiracialHH integer,
+MultiracialIncome integer,
+HispanicHH integer,
+HispanicIncome integer
+);
+
+--Loading on CMD line:
+psql -h 149.165.170.114 -U allow001 -d allow001
+\COPY IncomeRaceMpls FROM 'C:\work\class-project-alalloway\INCOME BY RACE\IncomeRaceMpls_ACS2017.csv' WITH CSV HEADER;
+
+--Table Queries
+
+/*1:A SQL query that involves only 1 table.
+prerace (officer-defined), race, and gender for people stopped, in descending order by number of stops*/
+
+SELECT prerace,race,gender,count(race) as race_count
+FROM minneapolispolicestops
+GROUP BY prerace,race,gender
+ORDER BY race_count DESC;
+
+/*2: A SQL query that involves 2 or more tables.
+Stop counts by race for each neighborhood*/
+
+SELECT count(stops.gid) as stop_count,stops.race, n.commname as neighborhood
+FROM minneapolispolicestops as stops
+INNER JOIN neighborhoods as n ON ST_Intersects(stops.geom,n.geom)
+GROUP BY n.commname,stops.race
+ORDER BY stop_count DESC;
+
+/*3: A SQL query using a sub query or a common table expression 
+stop counts for each race by census tract, with demographic and neighborhood info, ordered by stop counts descending*/
+
+CREATE VIEW demog_neighborhood AS 
+
+WITH census as
+(
+SELECT * 
+FROM incomeracempls as demog
+INNER JOIN hencotracts as tracts ON (demog.primaryid::varchar=tracts.geoid)
+)
+
+SELECT count(stops.gid)as stops_count,stops.race,census.geography_label,n.commname as neighborhood,census.geom,census.totalmedincome as median_income,(census.totalhh - census.whitehh) as nonwhite_households,totalhh as total_households
+FROM census
+INNER JOIN minneapolispolicestops as stops 
+ON ST_INTERSECTS(census.geom,stops.geom)
+INNER JOIN neighborhoods as n 
+ON ST_INTERSECTS(n.geom,census.geom)
+GROUP BY census.geography_label,neighborhood,median_income,nonwhite_households,total_households,stops.race,census.geom
+ORDER BY stops_count DESC;
+
+/*4: A spatial SQL query
+KMeans clustering of stops, for each race*/
+
+CREATE VIEW stop_clusters7 AS 
+SELECT stops.gid::integer,(ST_ClusterKMeans(stops.geom, 7)OVER (PARTITION BY stops.race)) as clust,stops.race,stops.geom 
+FROM minneapolispolicestops as stops;
