@@ -1,6 +1,5 @@
-# GIS5577 Final Project
-
-# Alysha Alloway: Minneapolis Poice Stops and Neighborhood Demographics
+# Alysha Alloway: Minneapolis Police Stops and Neighborhood Demographics
+## Created as part of a course at the University of Minnesota on Database Design and Administration
 
 
 
